@@ -108,6 +108,7 @@ end subroutine apply_damp
 !-----------------------------------------------------------------------
 !+
 !  radial damping zones for inner and outer boundary of a disc
+!  boundaries can be turned off by setting r1out or r2in to 0.
 !+
 !-----------------------------------------------------------------------
 real function get_damp_fac_disc(xyz,v0) result(fac)
@@ -118,9 +119,9 @@ real function get_damp_fac_disc(xyz,v0) result(fac)
 
  rcyl = sqrt(xyz(1)**2 + xyz(2)**2)
 
- if (rcyl < r2in) then
+ if (rcyl < r2in) .and. (r1out /= 0.) then
     fac = 1. - (sin(0.5*pi*(rcyl - r1in)/(r2in - r1in)))**2
- elseif (rcyl > r1out) then
+ elseif (rcyl > r1out) .and. (r1out /= 0.) then
     fac = (sin(0.5*pi*(rcyl - r1out)/(r2out - r1out)))**2*sqrt((r1in/r2out)**3)
  else
     fac = 0.
