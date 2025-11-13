@@ -85,10 +85,10 @@ end subroutine calc_damp
 !  apply damping term to velocity evolution (accelerations)
 !+
 !-----------------------------------------------------------------------
-subroutine apply_damp(fextx, fexty, fextz, vxyz, xyz, damp_fac)
+subroutine apply_damp(fextx, fexty, fextz, vxyz, xyz, damp_fac, ptmass)
  real, intent(inout) :: fextx, fexty, fextz
  real, intent(in)    :: vxyz(3), xyz(3), damp_fac
- real :: v0(3),fac
+ real :: v0(3),fac,ptmass
 
  v0 = 0.
  fac = 1.
@@ -97,7 +97,7 @@ subroutine apply_damp(fextx, fexty, fextz, vxyz, xyz, damp_fac)
  ! hence damping factor depends on spatial location
  ! also in this case we relax to a prescribed velocity, not zero
  !
- if (idamp==3) fac = get_damp_fac_disc(xyz,v0)
+ if (idamp==3) fac = get_damp_fac_disc(xyz,v0,ptmass)
 
  fextx = fextx - damp_fac*(vxyz(1)-v0(1))*fac
  fexty = fexty - damp_fac*(vxyz(2)-v0(2))*fac
@@ -110,11 +110,11 @@ end subroutine apply_damp
 !  radial damping zones for inner and outer boundary of a disc
 !+
 !-----------------------------------------------------------------------
-real function get_damp_fac_disc(xyz,v0) result(fac)
+real function get_damp_fac_disc(xyz,v0,ptmass) result(fac)
  use physcon, only:pi
  real, intent(in) :: xyz(3)
  real, intent(out) :: v0(3)
- real :: rcyl,omega,vphi
+ real :: rcyl,omega,vphi,ptmass
 
  rcyl = sqrt(xyz(1)**2 + xyz(2)**2)
 
@@ -126,7 +126,7 @@ real function get_damp_fac_disc(xyz,v0) result(fac)
     fac = 0.
  endif
 
- omega = sqrt(1./rcyl**3)
+ omega = sqrt(ptmass/rcyl**3)
  vphi = rcyl*omega
 
  v0(1) = -vphi*xyz(2)/rcyl   ! sin(phi) = y/R
