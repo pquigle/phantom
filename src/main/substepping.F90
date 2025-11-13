@@ -933,7 +933,7 @@ subroutine get_force(nptmass,npart,nsubsteps,ntypes,timei,dtextforce,xyzh,vxyzu,
        !
        if (idamp > 0) then
           xyz = (/xi,yi,zi/)
-          call apply_damp(fextx, fexty, fextz, vxyzu(1:3,i), xyz, damp_fac)
+          call apply_damp(fextx, fexty, fextz, vxyzu(1:3,i), xyz, damp_fac, xyzmh_ptmass(4,1))
        endif
        !
        ! Radiation pressure force with isink_radiation
