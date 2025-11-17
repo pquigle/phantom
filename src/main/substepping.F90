@@ -748,7 +748,7 @@ subroutine get_force(nptmass,npart,nsubsteps,ntypes,timei,dtextforce,xyzh,vxyzu,
  real                 :: fextx,fexty,fextz,xi,yi,zi,pmassi,damp_fac
  real                 :: fonrmaxi,phii,dtphi2i
  real                 :: dkdt,extrapfac
- real                 :: densi,uui,pri,pondensi,spsoundi,tempi,vxyz(3),fext_gr(3),xyz(3)
+ real                 :: densi,uui,pri,pondensi,spsoundi,tempi,vxyz(3),fext_gr(3),xyz(3),vxyz_corr(3)
  logical              :: extrap,last
 
  allocate(merge_ij(nptmass))
@@ -864,11 +864,11 @@ subroutine get_force(nptmass,npart,nsubsteps,ntypes,timei,dtextforce,xyzh,vxyzu,
  !$omp shared(metrics,metricderivs,metrics_ptmass,metricderivs_ptmass,ieos,C_force) &
  !$omp private(fextx,fexty,fextz,xi,yi,zi) &
  !$omp private(i,fonrmaxi,dtphi2i,phii,dtf) &
- !$omp private(densi,uui,pri,pondensi,spsoundi,tempi,xyz,vxyz,fext_gr) &
+ !$omp private(densi,uui,pri,pondensi,spsoundi,tempi,xyz,vxyz_corr,vxyz,fext_gr) &
  !$omp firstprivate(pmassi,itype) &
  !$omp reduction(min:dtextforcenew,dtphi2) &
  !$omp reduction(max:fonrmax) &
- !$omp reduction(+:fxyz_ptmass,dsdt_ptmass,ponsubg)
+ !$omp reduction(+:fxyz_ptmass,vxyz_ptmass,dsdt_ptmass,ponsubg)
  !$omp do
  do i=1,npart
     if (.not.isdead_or_accreted(xyzh(4,i))) then
@@ -932,8 +932,9 @@ subroutine get_force(nptmass,npart,nsubsteps,ntypes,timei,dtextforce,xyzh,vxyzu,
        ! damping
        !
        if (idamp > 0) then
-          xyz = (/xi,yi,zi/)
-          call apply_damp(fextx, fexty, fextz, vxyzu(1:3,i), xyz, damp_fac, xyzmh_ptmass(4,1))
+          xyz = (/xi - xyzmh_ptmass(1,1), yi - xyzmh_ptmass(2,1), zi - xyzmh_ptmass(3,1)/)
+          vxyz_corr = (/vxyzu(1,i) - vxyz_ptmass(1,1), vxyzu(2,i) - vxyz_ptmass(2,1), vxyzu(3,i) - vxyz_ptmass(3,1)/)
+          call apply_damp(fextx, fexty, fextz, vxyz_corr, xyz, damp_fac, xyzmh_ptmass(4,1))
        endif
        !
        ! Radiation pressure force with isink_radiation
