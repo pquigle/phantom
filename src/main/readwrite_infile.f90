@@ -23,8 +23,8 @@ module readwrite_infile
 !   dust_formation, eos, externalforces, forcing, gravwaveutils, growth,
 !   infile_utils, injection, io, io_control, mcfost_utils, metric,
 !   mpiutils, neighkdtree, nicil_sup, options, part, porosity, ptmass,
-!   ptmass_radiation, radiation_utils, shock_capturing, timestep,
-!   utils_apr, viscosity
+!   ptmass_radiation, radiation_utils, shock_capturing, sinksurface,
+!   timestep, utils_apr, viscosity
 !
  use options,   only:iexternalforce
  use part,      only:hfact,tolh
@@ -68,6 +68,7 @@ subroutine write_infile(infile,logfile,evfile,dumpfile,iwritein,iprint)
  use viscosity,        only:write_options_viscosity
  use mcfost_utils,     only:write_options_mcfost
  use shock_capturing,  only:write_options_shock_capturing
+ use sinksurface,      only:write_options_surface
  use io_control,       only:write_options_iocontrol
  use options,          only:write_options_output
  character(len=*), intent(in) :: infile,logfile,evfile,dumpfile
@@ -109,6 +110,7 @@ subroutine write_infile(infile,logfile,evfile,dumpfile,iwritein,iprint)
 
  call write_options_shock_capturing(iwritein)
  call write_options_damping(iwritein)
+ call write_options_surface(iwritein)
  !
  ! thermodynamics
  !
@@ -278,6 +280,7 @@ subroutine read_options_from_db(db,nerr,logfile,dumpfile,evfile)
  use viscosity,        only:read_options_viscosity
  use mcfost_utils,     only:read_options_mcfost
  use shock_capturing,  only:read_options_shock_capturing
+ use sinksurface,      only:read_options_surface
  use io_control,       only:read_options_iocontrol
  use options,          only:read_options_output
  use timestep,         only:read_options_timestep
@@ -302,6 +305,7 @@ subroutine read_options_from_db(db,nerr,logfile,dumpfile,evfile)
 
  call read_options_shock_capturing(db,nerr)
  call read_options_damping(db,nerr)
+ call read_options_surface(db,nerr)
  if (.not. disc_viscosity) call read_options_viscosity(db,nerr)
  !
  ! thermodynamics
