@@ -82,7 +82,7 @@ subroutine read_options_surface(db,nerr)
     call read_inopt(nghosts,'nghosts',db,errcount=nerr,min=0)
     call read_inopt(nshells,'nshells',db,errcount=nerr,min=0)
  case(3)
-    call read_inopt(Rres,'Rres',db,errcount=nerr,min=0)
+    call read_inopt(Rres,'Rres',db,errcount=nerr,min=0.)
  end select
 
 end subroutine read_options_surface
