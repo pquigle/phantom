@@ -19,13 +19,12 @@ module sinksurface
 !
  implicit none
 
- public  :: calc_damp,apply_damp,get_damp_fac_disc
  public  :: write_options_surface,read_options_surface
 
  integer, public    :: isurface  = 0
  integer, parameter :: isurface_max = 3  ! maximum allowed value of isurface
  real, public :: rotW      = 0.
- real, public :: r1in,r1out
+ real, public :: damp,r1in,r2in
  integer, public :: nghosts,nshells
  real, public :: Rres
 
@@ -81,7 +80,7 @@ subroutine read_options_surface(db,nerr)
     call read_inopt(r2in,'r2in',db,errcount=nerr,min=r1in)
  case(2)
     call read_inopt(nghosts,'nghosts',db,errcount=nerr,min=0)
-    call read_inopt(nshells,'nshells',db,errcount=nerr,min=0>)
+    call read_inopt(nshells,'nshells',db,errcount=nerr,min=0)
  case(3)
     call read_inopt(Rres,'Rres',db,errcount=nerr,min=0)
  end select

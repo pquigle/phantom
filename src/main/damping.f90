@@ -178,7 +178,7 @@ subroutine read_options_damping(db,nerr)
  integer,      intent(inout) :: nerr
 
  call read_inopt(idamp,'idamp',db,errcount=nerr,min=0,max=idamp_max,default=0)
- if (idamp > 0) call read_inopt(damp,'damp',db,errcount=nerr,min=0.,max=1.,default=0.)
+ if (idamp > 0) call read_inopt(damp,'damp',db,errcount=nerr,min=0.,default=0.)
  select case(idamp)
  case(3)
     call read_inopt(r1in,'r1in',db,errcount=nerr,min=0.)
