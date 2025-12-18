@@ -433,4 +433,79 @@ subroutine set_ellipse(lattice,id,master,r_ellipsoid,delta,hfact,xyzh,np,nptot,n
 
 end subroutine set_ellipse
 
+!-----------------------------------------------------------------------
+!+
+!  This subroutine positions particles on a spherical shell 
+!  Implemented spacing modes are:
+!         1. Fibonnaci (eastwards) spiral
+!         2. Latitude-longitude lattice (not yet implemented)
+!         3. Random (not yet implemented)
+!
+!+
+!-----------------------------------------------------------------------
+
+subroutine set_shell(lattice,id,master,r_shell,nps_requested,xyz_origin,itype,ierr)
+ character(len=*), intent(in)    :: lattice
+ integer,          intent(in)    :: id,master
+ integer,          intent(inout) :: np
+ integer,          intent(in)    :: nps_requested
+ real,             intent(in)    :: hfact
+ real,             intent(out)   :: xyzh(:,:)
+ integer(kind=8),  intent(inout) :: nptot
+ integer,          intent(in),    optional :: np_requested
+ real,             intent(in),    optional :: xyz_origin(3)
+ integer,          parameter     :: maxits = 20
+ real,             parameter     :: tol    = 1.e-9
+ real,             parameter     :: fib    = 1.6180339887
+ real,             parameter     :: divfib = 1/1.6180339887
+ integer                         :: i,k,ierr,np_half,np_tot
+ real                            :: xmin,xmax,ymin,ymax,zmin,zmax
+ !
+ !--Initialise values
+ !
+ ierr          = 0
+ np_half       = nps_requested/2
+ np_tot        = 2*np_half+1
+ delta_r       = 3.62 * r_shell / sqrt(np_tot)
+
+ select case(lattice)
+ case('fibonnaci')
+    do i=1,np_tot
+       k = np_half - i + 1
+ 
+       ! Caclulate Fibonnaci spiral latitude and longitude
+       lati = asin(real(2*k)/np_tot)
+       loni = 2*pi*k*divfib
+
+       ! Calculate Cartesian positions, corrected to origin
+       xi = r_shell * cos(lati) * cos(loni) - xyz_origin(1)
+       yi = r_shell * cos(lati) * sin(loni) - xyz_origin(2)
+       zi = r_shell * sin(lati) - xyz_origin(3)
+
+       xyzh(1,i) = xi
+       xyzh(2,i) = yi
+       xyzh(3,i) = zi
+       xyzh(4,i) = hfact*delta_r
+
+       ! TODO: implement rotation into the setup
+       ! r_xy = sqrt(xi**2 + yi**2)
+       ! vphi = Wrot * sqrt(G * Mstar / r_shell**3) * r_xy
+       ! vxyzu(1,i) = vphi * (-1)*sin(loni)
+       ! vxyzu(2,i) = vphi * cos(loni)
+       ! vxyzu(3,i) = 0.
+       ! vxyzu(4,i) = ??? ! to be determined by EOS
+    enddo
+
+ case default
+    ierr = 2 ! not an included/implemented option
+    return
+ end select
+
+ do i=1,np_tot
+    call set_particle_type(i,itype)
+ enddo
+
+
+end subroutine set_shell
+
 end module spherical
