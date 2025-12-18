@@ -190,8 +190,8 @@ ifeq ($(SETUP), disc)
     IND_TIMESTEPS=yes
 endif
 
-ifeq ($(SETUP), disc)
-#   locally isothermal gas disc
+ifeq ($(SETUP), sinksurface)
+#   locally isothermal gas disc with sink surface
     SETUPFILE=setup_sinksurface.f90
     ANALYSIS= analysis_disc.f90
     ISOTHERMAL=yes

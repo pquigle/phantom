@@ -449,24 +449,24 @@ subroutine set_shell(lattice,id,master,r_shell,nps_requested,xyz_origin,itype,ie
  integer,          intent(in)    :: id,master
  integer,          intent(inout) :: np
  integer,          intent(in)    :: nps_requested
- real,             intent(in)    :: hfact
+ real,             intent(in)    :: hfact,r_shell,delta_r
  real,             intent(out)   :: xyzh(:,:)
- integer(kind=8),  intent(inout) :: nptot
  integer,          intent(in),    optional :: np_requested
  real,             intent(in),    optional :: xyz_origin(3)
+ integer,          intent(in),    optional :: itype
  integer,          parameter     :: maxits = 20
  real,             parameter     :: tol    = 1.e-9
  real,             parameter     :: fib    = 1.6180339887
  real,             parameter     :: divfib = 1/1.6180339887
  integer                         :: i,k,ierr,np_half,np_tot
- real                            :: xmin,xmax,ymin,ymax,zmin,zmax
+ real                            :: lati,loni,xi,yi,zi,
  !
  !--Initialise values
  !
  ierr          = 0
  np_half       = nps_requested/2
  np_tot        = 2*np_half+1
- delta_r       = 3.62 * r_shell / sqrt(np_tot)
+ delta_r       = 3.62 * r_shell / sqrt(real(np_tot))
 
  select case(lattice)
  case('fibonnaci')
