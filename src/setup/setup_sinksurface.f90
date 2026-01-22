@@ -227,7 +227,7 @@ module setup
  real :: rms_mach, tfact
 
  !--sphere of boundary particles around sink
- integer :: nghosts,nshells
+ integer :: nshells,nghosts
  real :: rotW
 
  !--time
@@ -294,6 +294,9 @@ subroutine setpart(id,npart,npartoftype,xyzh,massoftype,vxyzu,polyk,gamma,hfact,
 
  !--setup disc(s)
  call setup_discs(id,fileprefix,hfact,gamma,npart,polyk,npartoftype,massoftype,xyzh,vxyzu)
+
+ !--setup sink boundary(/boundaries)
+ call setup_sink_boundary(id,fileprefix,hfact,npart,npartoftype,massoftype,xyzh,vxyzu)
 
  !--planet atmospheres
  call planet_atmosphere(id,npart,xyzh,vxyzu,npartoftype,gamma,hfact)
@@ -508,8 +511,8 @@ subroutine set_default_options()
  fplanet       = 180.
 
  !--sink surface
- nghosts       = 0
  nshells       = 0
+ nghosts       = 0
  rotW          = 0.
 
  !--stratification
@@ -1000,9 +1003,6 @@ subroutine setup_central_objects(fileprefix)
        mcentral = m2
 
     end select
-    do i=1,nshells
-       set_shell('fibonnaci',id,master,accr1*(1.0110.01*i),nghosts,xyzmh_ptmass(1:3,1),iboundary,ierr)
-    endif
  end select
 
  !--set array of central object masses
@@ -1296,6 +1296,7 @@ subroutine setup_discs(id,fileprefix,hfact,gamma,npart,polyk,&
                         enc_mass         = enc_mass(:,i),        &
                         prefix           = prefix)
 
+
           !--set dustfrac
           call set_dustfrac(i,npart+1,npart+1+npingasdisc,xyzh,xorigini)
 
@@ -1487,6 +1488,45 @@ end subroutine setup_discs
 
 !--------------------------------------------------------------------------
 !
+! Set up the sink surface(s)
+!
+!--------------------------------------------------------------------------
+
+subroutine setup_sink_boundary(id,fileprefix,hfact,npart,npartoftype,massoftype,xyzh,vxyzu)
+ use spherical,            only:set_shell
+ integer,           intent(in)    :: id
+ character(len=20), intent(in)    :: fileprefix
+ real,              intent(out)   :: hfact
+ integer,           intent(out)   :: npart
+ integer,           intent(out)   :: npartoftype(:)
+ real,              intent(out)   :: massoftype(:)
+ real,              intent(inout) :: xyzh(:,:)
+ real,              intent(inout) :: vxyzu(:,:)
+
+ integer            :: i,ipart,ierr
+ !real               :: xorigini(3),vorigini(3)
+
+ hfact = hfact_default
+
+ if (icentral.ne.1) return
+
+ !--set boundary shells going from inside out, each spaced by 0.01 Rstar
+ do i=1,nshells
+    call set_shell('fibonnaci',id,master,accr1*(1.01-0.01*i),npart,nghosts,xyzh,vxyzu,xyzmh_ptmass(1:3,1),iboundary,ierr)
+    npart = npart + nghosts
+    npartoftype(iboundary) = npartoftype(iboundary) + nghosts
+ enddo
+
+ write(*,*) 'nboundary = ', npartoftype(iboundary)
+
+ !--set boundary particle mass to be equal to the gas particle mass
+ massoftype(iboundary) = massoftype(igas)
+
+
+end subroutine setup_sink_boundary
+
+!--------------------------------------------------------------------------
+!
 ! Set up a planetary atmosphere
 !
 !--------------------------------------------------------------------------
@@ -1546,7 +1586,7 @@ subroutine set_planet_atm(id,xyzh,vxyzu,npartoftype,maxvxyzu,itype,a0,R_in, &
                           HoverR,Mstar,q_index,gamma,Ratm_in,Ratm_out,r_surface, &
                           npart,npart_planet_atm,npart_disc,hfact)
  use part,          only:set_particle_type,igas,iboundary
- use spherical,     only:set_sphere,set_shell,rho_func
+ use spherical,     only:set_sphere,rho_func
  integer, intent(in)    :: id
  real,    intent(inout) :: xyzh(:,:)
  real,    intent(inout) :: vxyzu(:,:)
@@ -2815,8 +2855,8 @@ subroutine write_setupfile(filename)
 
     !-- options for sink surface
     call write_inopt(rotW,'rotW','fraction of critical rotation',iunit)
-    call write_inopt(nghosts,'nghosts','number of ghost boundary particles per shell',iunit)
     call write_inopt(nshells,'nshells','number of boundary shells',iunit)
+    call write_inopt(nghosts,'nghosts','number of ghost boundary particles per shell',iunit)
 
 
     !--options for oblateness
@@ -3221,7 +3261,7 @@ subroutine read_setupfile(filename,ierr)
     enddo
 
     !-- sink surface
-    call read_inopt(rotW,'rotW',db,errcount=nerr,min=0.,max=1.,default=0.)
+    call read_inopt(rotW,'rotW',db,errcount=nerr,min=0.,max=1.,default=0.67)
     call read_inopt(nghosts,'nghosts',db,errcount=nerr,min=0)
     call read_inopt(nshells,'nshells',db,errcount=nerr,min=0)
  end select

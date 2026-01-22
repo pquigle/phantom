@@ -19,10 +19,11 @@ module spherical
 !
  use unifdis,    only:set_unifdis,mask_prototype,mask_true
  use physcon,    only:pi
+ use part,       only:set_particle_type
  use stretchmap, only:rho_func
  implicit none
 
- public  :: set_sphere,set_ellipse,rho_func
+ public  :: set_sphere,set_ellipse,rho_func,set_shell
 
  integer, parameter :: &
    ierr_notinrange    = 1, &
@@ -444,22 +445,21 @@ end subroutine set_ellipse
 !+
 !-----------------------------------------------------------------------
 
-subroutine set_shell(lattice,id,master,r_shell,nps_requested,xyz_origin,itype,ierr)
+subroutine set_shell(lattice,id,master,r_shell,npart_start_count,nps_requested,xyzh,vxyzu,xyz_origin,itype,ierr)
  character(len=*), intent(in)    :: lattice
  integer,          intent(in)    :: id,master
- integer,          intent(inout) :: np
- integer,          intent(in)    :: nps_requested
- real,             intent(in)    :: hfact,r_shell,delta_r
- real,             intent(out)   :: xyzh(:,:)
- integer,          intent(in),    optional :: np_requested
+ integer,          intent(in)    :: npart_start_count,nps_requested
+ real                            :: hfact,r_shell,delta_r
+ real,             intent(inout) :: xyzh(:,:)
+ real,             intent(inout) :: vxyzu(:,:)
  real,             intent(in),    optional :: xyz_origin(3)
  integer,          intent(in),    optional :: itype
  integer,          parameter     :: maxits = 20
  real,             parameter     :: tol    = 1.e-9
  real,             parameter     :: fib    = 1.6180339887
  real,             parameter     :: divfib = 1/1.6180339887
- integer                         :: i,k,ierr,np_half,np_tot
- real                            :: lati,loni,xi,yi,zi,
+ integer                         :: i,k,ipart,ierr,np_half,np_tot
+ real                            :: lati,loni,xi,yi,zi
  !
  !--Initialise values
  !
@@ -471,23 +471,29 @@ subroutine set_shell(lattice,id,master,r_shell,nps_requested,xyz_origin,itype,ie
  select case(lattice)
  case('fibonnaci')
     do i=1,np_tot
-       k = np_half - i + 1
+       k     = np_half - i + 1
+       ipart = npart_start_count + i
  
        ! Caclulate Fibonnaci spiral latitude and longitude
        lati = asin(real(2*k)/np_tot)
        loni = 2*pi*k*divfib
 
        ! Calculate Cartesian positions, corrected to origin
-       xi = r_shell * cos(lati) * cos(loni) - xyz_origin(1)
-       yi = r_shell * cos(lati) * sin(loni) - xyz_origin(2)
-       zi = r_shell * sin(lati) - xyz_origin(3)
+       xi = r_shell * cos(lati) * cos(loni) + xyz_origin(1)
+       yi = r_shell * cos(lati) * sin(loni) + xyz_origin(2)
+       zi = r_shell * sin(lati) + xyz_origin(3)
 
-       xyzh(1,i) = xi
-       xyzh(2,i) = yi
-       xyzh(3,i) = zi
-       xyzh(4,i) = hfact*delta_r
+       xyzh(1,ipart) = xi
+       xyzh(2,ipart) = yi
+       xyzh(3,ipart) = zi
+       !xyzh(4,ipart) = hfact*delta_r
+       xyzh(4,ipart) = 2.*delta_r
 
        ! TODO: implement rotation into the setup
+       vxyzu(1,ipart) = 0.
+       vxyzu(2,ipart) = 0.
+       vxyzu(3,ipart) = 0.
+       vxyzu(4,ipart) = 0. ! to be determined by EOS
        ! r_xy = sqrt(xi**2 + yi**2)
        ! vphi = Wrot * sqrt(G * Mstar / r_shell**3) * r_xy
        ! vxyzu(1,i) = vphi * (-1)*sin(loni)
@@ -502,7 +508,8 @@ subroutine set_shell(lattice,id,master,r_shell,nps_requested,xyz_origin,itype,ie
  end select
 
  do i=1,np_tot
-    call set_particle_type(i,itype)
+    ipart = npart_start_count + i
+    call set_particle_type(ipart,itype)
  enddo
 
 
