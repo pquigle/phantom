@@ -42,7 +42,7 @@ module damping
  real, public :: r2in = 0.357
  real, public :: r1out = 2.52
  real, public :: r2out = 3.0
- real, public :: rotW  = 1.0
+ real, public :: dampW  = 1.0
 
 contains
 
@@ -128,7 +128,7 @@ real function get_damp_fac_disc(xyz,v0,ptmass) result(fac)
  endif
 
  omega = sqrt(ptmass/rcyl**3)
- vphi = rotW*rcyl*omega
+ vphi = dampW*rcyl*omega
 
  v0(1) = -vphi*xyz(2)/rcyl   ! sin(phi) = y/R
  v0(2) =  vphi*xyz(1)/rcyl   ! cos(phi) = x/R
@@ -164,7 +164,7 @@ subroutine write_options_damping(iunit)
     call write_inopt(r2in,'r2in','outer boundary of inner disc damping zone',iunit)
     call write_inopt(r1out,'r1out','inner boundary of outer disc damping zone',iunit)
     call write_inopt(r2out,'r2out','outer boundary of outer disc damping zone',iunit)
-    call write_inopt(rotW,'rotW','fraction of keplerian rotation rate', iunit)
+    call write_inopt(dampW,'dampW','fraction of keplerian rotation rate', iunit)
  end select
 
 end subroutine write_options_damping
@@ -187,7 +187,7 @@ subroutine read_options_damping(db,nerr)
     call read_inopt(r2in,'r2in',db,errcount=nerr,min=r1in)
     call read_inopt(r1out,'r1out',db,errcount=nerr,min=r2in)
     call read_inopt(r2out,'r2out',db,errcount=nerr,min=r1out)
-    call read_inopt(rotW, 'rotW',db,errcount=nerr, min=0.)
+    call read_inopt(dampW, 'dampW',db,errcount=nerr, min=0.)
  case(2)
     call read_inopt(tdyn_s,'tdyn_s',db,errcount=nerr,min=0.)
  end select
