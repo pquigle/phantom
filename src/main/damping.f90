@@ -18,7 +18,7 @@ module damping
 !
 ! :Runtime parameters:
 !   - damp   : *damping timescale as fraction of orbital timescale*
-!   - idamp  : *artificial damping of velocities (0=off, 1=constant, 2=star, 3=disc)*
+!   - idamp  : *artificial damping of velocities (0=off, 1=constant, 2=star, 3=disc, 4=surface)*
 !   - r1in   : *inner boundary of inner disc damping zone*
 !   - r1out  : *inner boundary of outer disc damping zone*
 !   - r2in   : *outer boundary of inner disc damping zone*
@@ -35,13 +35,13 @@ module damping
  private
 
  integer, public    :: idamp     = 0
- integer, parameter :: idamp_max = 3  ! maximum allowed value of idamp
+ integer, parameter :: idamp_max = 4  ! maximum allowed value of idamp
  real, public :: tdyn_s      = 0.
  real, public :: damp        = 0.
  real, public :: r1in = 0.3
  real, public :: r2in = 0.357
  real, public :: r1out = 2.52
- real, public :: r2out = 3.0
+ real, public :: r2out = huge
  real, public :: dampW  = 1.0
 
 contains
@@ -59,7 +59,7 @@ subroutine calc_damp(time, damp_fac)
  real                :: tau1, tau2, tdyn_star, orbital_period
 
  select case(idamp)
- case(3)
+ case(3, 4)
     orbital_period = 2.*pi*sqrt(r1in**3)  ! G=M=1
     damp_fac = damp/orbital_period ! fraction of orbital time at r=r1in with G=M=1
  case(2)
@@ -98,7 +98,7 @@ subroutine apply_damp(fextx, fexty, fextz, vxyz, xyz, damp_fac, ptmass)
  ! hence damping factor depends on spatial location
  ! also in this case we relax to a prescribed velocity, not zero
  !
- if (idamp==3) fac = get_damp_fac_disc(xyz,v0,ptmass)
+ if (idamp==3.OR.idamp==4) fac = get_damp_fac_disc(xyz,v0,ptmass)
 
  fextx = fextx - damp_fac*(vxyz(1)-v0(1))*fac
  fexty = fexty - damp_fac*(vxyz(2)-v0(2))*fac
@@ -121,7 +121,7 @@ real function get_damp_fac_disc(xyz,v0,ptmass) result(fac)
 
  if (rcyl < r2in) then
     fac = 1. - (sin(0.5*pi*(rcyl - r1in)/(r2in - r1in)))**2
- elseif (rcyl > r1out) then
+ elseif ((idamp /= 4).and.(rcyl > r1out)) then
     fac = (sin(0.5*pi*(rcyl - r1out)/(r2out - r1out)))**2*sqrt((r1in/r2out)**3)
  else
     fac = 0.
@@ -164,6 +164,11 @@ subroutine write_options_damping(iunit)
     call write_inopt(r2in,'r2in','outer boundary of inner disc damping zone',iunit)
     call write_inopt(r1out,'r1out','inner boundary of outer disc damping zone',iunit)
     call write_inopt(r2out,'r2out','outer boundary of outer disc damping zone',iunit)
+    call write_inopt(dampW,'dampW','fraction of keplerian rotation rate', iunit)
+ case(4)
+    call write_inopt(damp,'damp','damping timescale as fraction of orbital timescale',iunit)
+    call write_inopt(r1in,'r1in','inner boundary of inner disc damping zone',iunit)
+    call write_inopt(r2in,'r2in','outer boundary of inner disc damping zone',iunit)
     call write_inopt(dampW,'dampW','fraction of keplerian rotation rate', iunit)
  end select
 
