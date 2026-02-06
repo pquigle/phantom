@@ -41,7 +41,7 @@ module damping
  real, public :: r1in = 0.3
  real, public :: r2in = 0.357
  real, public :: r1out = 2.52
- real, public :: r2out = huge
+ real, public :: r2out = 3.0
  real, public :: dampW  = 1.0
 
 contains
