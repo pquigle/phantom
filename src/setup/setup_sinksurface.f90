@@ -136,6 +136,7 @@ module setup
  integer :: nsinks,subst,subst1,subst2
  real    :: bhspin,bhspinangle
  logical :: einst_prec
+ real    :: acc_surf
 
  !--stratification
  real    :: temp_atm0,temp_mid0
@@ -511,6 +512,7 @@ subroutine set_default_options()
  fplanet       = 180.
 
  !--sink surface
+ acc_surf      = 1.
  nshells       = 0
  nghosts       = 0
  rotW          = 0.
@@ -882,7 +884,7 @@ subroutine setup_central_objects(fileprefix)
        xyzmh_ptmass(:,:)            = 0.
        xyzmh_ptmass(1:3,nptmass)    = 0.
        xyzmh_ptmass(4,nptmass)      = m1
-       xyzmh_ptmass(ihacc,nptmass)  = accr1
+       xyzmh_ptmass(ihacc,nptmass)  = accr1 * acc_surf
        xyzmh_ptmass(ihsoft,nptmass) = 0.
        vxyz_ptmass                  = 0.
        mcentral                     = m1
@@ -904,11 +906,11 @@ subroutine setup_central_objects(fileprefix)
           print "(a,g10.3,a)",'   Perturber mass:     ', m2,    trim(mass_unit)
           mcentral = m1
        end select
-       print "(a,g10.3,a)",'   Accretion Radius 1: ', accr1, trim(dist_unit)
-       print "(a,g10.3,a)",'   Accretion Radius 2: ', accr2, trim(dist_unit)
+       print "(a,g10.3,a)",'   Accretion Radius 1: ', accr1*acc_surf, trim(dist_unit)
+       print "(a,g10.3,a)",'   Accretion Radius 2: ', accr2*acc_surf, trim(dist_unit)
 
        nptmass  = 0
-       call set_orbit(binary,m1,m2,accr1,accr2,xyzmh_ptmass,vxyz_ptmass,nptmass,verbose=.true.,ierr=ierr)
+       call set_orbit(binary,m1,m2,accr1*acc_surf,accr2*acc_surf,xyzmh_ptmass,vxyz_ptmass,nptmass,verbose=.true.,ierr=ierr)
 
        discpos = 0.
        discvel = 0.
@@ -2771,6 +2773,7 @@ subroutine write_setupfile(filename)
  case (1)
     !--sink particle(s)
     call write_inopt(nsinks,'nsinks','number of sinks',iunit)
+    call write_inopt(acc_surf,'acc_surf','shrink accretion radius by this fraction',iunit)
     select case (nsinks)
     case (1)
        !--single star
@@ -3193,6 +3196,7 @@ subroutine read_setupfile(filename,ierr)
     iexternalforce = 0
     !--sink particles
     call read_inopt(nsinks,'nsinks',db,min=1,errcount=nerr)
+    call read_inopt(acc_surf,'acc_surf',db,errcount=nerr,min=0.,max=1.)
     select case (nsinks)
     case (1)
        !--single star
@@ -3261,7 +3265,7 @@ subroutine read_setupfile(filename,ierr)
     enddo
 
     !-- sink surface
-    call read_inopt(rotW,'rotW',db,errcount=nerr,min=0.,max=1.,default=0.67)
+    call read_inopt(rotW,'rotW',db,errcount=nerr,min=0.,max=1.)
     call read_inopt(nghosts,'nghosts',db,errcount=nerr,min=0)
     call read_inopt(nshells,'nshells',db,errcount=nerr,min=0)
  end select
