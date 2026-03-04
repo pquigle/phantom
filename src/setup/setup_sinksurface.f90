@@ -886,6 +886,7 @@ subroutine setup_central_objects(fileprefix)
        xyzmh_ptmass(4,nptmass)      = m1
        xyzmh_ptmass(ihacc,nptmass)  = accr1 * acc_surf
        xyzmh_ptmass(ihsoft,nptmass) = 0.
+       xyzmh_ptmass(iReff,nptmass)  = accr1
        vxyz_ptmass                  = 0.
        mcentral                     = m1
        discpos                      = 0.
@@ -911,6 +912,9 @@ subroutine setup_central_objects(fileprefix)
 
        nptmass  = 0
        call set_orbit(binary,m1,m2,accr1*acc_surf,accr2*acc_surf,xyzmh_ptmass,vxyz_ptmass,nptmass,verbose=.true.,ierr=ierr)
+
+       xyzmh_ptmass(iReff,1)  = accr1
+       xyzmh_ptmass(iReff,2)  = accr2
 
        discpos = 0.
        discvel = 0.
