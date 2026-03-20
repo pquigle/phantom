@@ -193,6 +193,17 @@ endif
 ifeq ($(SETUP), sinksurface)
 #   locally isothermal gas disc with sink surface
     SETUPFILE=setup_sinksurface.f90
+    ANALYSIS= analysis_binarydisc.f90
+    ISOTHERMAL=yes
+    KNOWN_SETUP=yes
+    MULTIRUNFILE= multirun.f90
+    IND_TIMESTEPS=yes
+endif
+
+ifeq ($(SETUP), injdisc)
+#   locally isothermal gas disc
+    SETUPFILE= setup_sinksurface.f90
+    SRCINJECT= utils_binary.f90 evolve_planet.f90 inject_randomwind.f90
     ANALYSIS= analysis_disc.f90
     ISOTHERMAL=yes
     KNOWN_SETUP=yes
