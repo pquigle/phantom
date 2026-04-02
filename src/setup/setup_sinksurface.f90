@@ -297,7 +297,7 @@ subroutine setpart(id,npart,npartoftype,xyzh,massoftype,vxyzu,polyk,gamma,hfact,
  call setup_discs(id,fileprefix,hfact,gamma,npart,polyk,npartoftype,massoftype,xyzh,vxyzu)
 
  !--setup sink boundary(/boundaries)
- call setup_sink_boundary(id,fileprefix,hfact,npart,npartoftype,massoftype,xyzh,vxyzu)
+ call setup_sink_boundary(id,fileprefix,hfact,npart,npartoftype,massoftype,xyzh,vxyzu,xyzmh_ptmass,vxyz_ptmass,Wrot)
 
  !--planet atmospheres
  call planet_atmosphere(id,npart,xyzh,vxyzu,npartoftype,gamma,hfact)
@@ -1498,7 +1498,8 @@ end subroutine setup_discs
 !
 !--------------------------------------------------------------------------
 
-subroutine setup_sink_boundary(id,fileprefix,hfact,npart,npartoftype,massoftype,xyzh,vxyzu)
+subroutine setup_sink_boundary(id,fileprefix,hfact,npart,npartoftype,massoftype, &
+                               xyzh,vxyzu,xyzmh_ptmass,vxyz_ptmass,Wrot)
  use spherical,            only:set_shell
  integer,           intent(in)    :: id
  character(len=20), intent(in)    :: fileprefix
@@ -1506,8 +1507,9 @@ subroutine setup_sink_boundary(id,fileprefix,hfact,npart,npartoftype,massoftype,
  integer,           intent(out)   :: npartoftype(:)
  real,              intent(out)   :: massoftype(:)
  real,              intent(in)    :: hfact
- real,              intent(inout) :: xyzh(:,:)
- real,              intent(inout) :: vxyzu(:,:)
+ real,              intent(in)    :: Wrot
+ real,              intent(inout) :: xyzh(:,:),vxyzu(:,:)
+ real,              intent(inout) :: xyzmh_ptmass(:,:),vxyz_ptmass(:,:)
 
  integer            :: i,ipart,ierr
 
@@ -1516,7 +1518,7 @@ subroutine setup_sink_boundary(id,fileprefix,hfact,npart,npartoftype,massoftype,
 
  !--set boundary shells going from outside in, each spaced by 0.01 Rstar
  !--default selection of first sink in list
- call set_shell('fibonacci',id,master,npart,nshells,nghosts,xyzh,vxyzu,hfact,1,iboundary)
+ call set_shell('fibonacci',id,master,npart,nshells,nghosts,xyzh,vxyzu,xyzmh_ptmass,vxyz_ptmass,Wrot,hfact,1,iboundary)
  npart = npart + nshells*(nghosts + MOD(nghosts + 1, 2))
  npartoftype(iboundary) = npartoftype(iboundary) + nshells*(nghosts + MOD(nghosts + 1, 2))
 

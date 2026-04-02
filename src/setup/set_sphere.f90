@@ -445,20 +445,23 @@ end subroutine set_ellipse
 !+
 !-----------------------------------------------------------------------
 
-subroutine set_shell(lattice,id,master,npart_start_count,nshells,nps_requested,xyzh,vxyzu,hfact,isink,itype)
+subroutine set_shell(lattice,id,master,npart_start_count,nshells,nps_requested, &
+                     xyzh,vxyzu,xyzmh_ptmass,vxyz_ptmass,Wrot,hfact,isink,itype)
+ use part,         only:iReff
  character(len=*), intent(in)    :: lattice
  integer,          intent(in)    :: id,master
  integer,          intent(in)    :: npart_start_count,nshells,nps_requested
- integer,          intent(in)    :: hfact
  integer,          intent(in)    :: isink
- real,             intent(inout) :: xyzh(:,:)
- real,             intent(inout) :: vxyzu(:,:)
+ real,             intent(in)    :: hfact
+ real,             intent(in)    :: Wrot
+ real,             intent(inout) :: xyzh(:,:),vxyzu(:,:)
+ real,             intent(inout) :: xyzmh_ptmass(:,:),vxyz_ptmass(:,:)
  integer,          intent(in),    optional :: itype
  real,             parameter     :: tol    = 1.e-9
  real,             parameter     :: fib    = 1.6180339887
  real,             parameter     :: divfib = 1/1.6180339887
  integer                         :: i,j,k,ipart,ierr,np_half,np_tot
- real                            :: lati,loni,xi,yi,zi,r2_xy
+ real                            :: lati,loni,xi,yi,zi,r2_xy,vphi
  real                            :: r_shell,delta_r
  !
  !--Initialise values
@@ -494,7 +497,7 @@ subroutine set_shell(lattice,id,master,npart_start_count,nshells,nps_requested,x
 
           ! TODO: implement rotation into the setup
           r2_xy = xi**2 + yi**2
-          vphi = Wrot * sqrt(G * xyzmh_ptmass(4,isink) * r2_xy / r_shell**3)
+          vphi = Wrot * sqrt(xyzmh_ptmass(4,isink) * r2_xy / r_shell**3)
           vxyzu(1,ipart) = vphi * (-1)*sin(loni) + vxyz_ptmass(1,isink)
           vxyzu(2,ipart) = vphi * cos(loni) + vxyz_ptmass(2,isink)
           vxyzu(3,ipart) = vxyz_ptmass(3,isink)
