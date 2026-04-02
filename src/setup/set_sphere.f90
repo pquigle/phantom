@@ -445,61 +445,62 @@ end subroutine set_ellipse
 !+
 !-----------------------------------------------------------------------
 
-subroutine set_shell(lattice,id,master,r_shell,npart_start_count,nps_requested,xyzh,vxyzu,xyz_origin,itype,ierr)
+subroutine set_shell(lattice,id,master,npart_start_count,nshells,nps_requested,xyzh,vxyzu,hfact,isink,itype)
  character(len=*), intent(in)    :: lattice
  integer,          intent(in)    :: id,master
- integer,          intent(in)    :: npart_start_count,nps_requested
- real                            :: hfact,r_shell,delta_r
+ integer,          intent(in)    :: npart_start_count,nshells,nps_requested
+ integer,          intent(in)    :: hfact
+ integer,          intent(in)    :: isink
  real,             intent(inout) :: xyzh(:,:)
  real,             intent(inout) :: vxyzu(:,:)
- real,             intent(in),    optional :: xyz_origin(3)
  integer,          intent(in),    optional :: itype
- integer,          parameter     :: maxits = 20
  real,             parameter     :: tol    = 1.e-9
  real,             parameter     :: fib    = 1.6180339887
  real,             parameter     :: divfib = 1/1.6180339887
- integer                         :: i,k,ipart,ierr,np_half,np_tot
- real                            :: lati,loni,xi,yi,zi
+ integer                         :: i,j,k,ipart,ierr,np_half,np_tot
+ real                            :: lati,loni,xi,yi,zi,r2_xy
+ real                            :: r_shell,delta_r
  !
  !--Initialise values
  !
  ierr          = 0
  np_half       = nps_requested/2
  np_tot        = 2*np_half+1
- delta_r       = 3.62 * r_shell / sqrt(real(np_tot))
+ delta_r       = 3.62 * xyzmh_ptmass(iReff,isink) / sqrt(real(np_tot))
 
  select case(lattice)
- case('fibonnaci')
-    do i=1,np_tot
-       k     = np_half - i + 1
-       ipart = npart_start_count + i
+ case('fibonacci')
+    ipart = npart_start_count
+    do i=1,nshells
+       r_shell   = (1.01-0.01*i) * xyzmh_ptmass(iReff,isink)
+       rot_shell = real(i-1)/nshells
+       do j=1,np_tot
+          k     = np_half - j + 1
+          ipart = ipart + 1
  
-       ! Caclulate Fibonnaci spiral latitude and longitude
-       lati = asin(real(2*k)/np_tot)
-       loni = 2*pi*k*divfib
+          ! Caclulate Fibonnaci spiral latitude and longitude
+          lati = asin(real(2*k)/np_tot)
+          loni = 2*pi*(k+rot_shell)*divfib
 
-       ! Calculate Cartesian positions, corrected to origin
-       xi = r_shell * cos(lati) * cos(loni) + xyz_origin(1)
-       yi = r_shell * cos(lati) * sin(loni) + xyz_origin(2)
-       zi = r_shell * sin(lati) + xyz_origin(3)
+          ! Calculate Cartesian positions, corrected to origin
+          xi = r_shell * cos(lati) * cos(loni) 
+          yi = r_shell * cos(lati) * sin(loni) 
+          zi = r_shell * sin(lati)
 
-       xyzh(1,ipart) = xi
-       xyzh(2,ipart) = yi
-       xyzh(3,ipart) = zi
-       !xyzh(4,ipart) = hfact*delta_r
-       xyzh(4,ipart) = 2.*delta_r
+          xyzh(1,ipart) = xi + xyzmh_ptmass(1,isink)
+          xyzh(2,ipart) = yi + xyzmh_ptmass(2,isink)
+          xyzh(3,ipart) = zi + xyzmh_ptmass(3,isink)
+          xyzh(4,ipart) = hfact*delta_r
 
-       ! TODO: implement rotation into the setup
-       vxyzu(1,ipart) = 0.
-       vxyzu(2,ipart) = 0.
-       vxyzu(3,ipart) = 0.
-       vxyzu(4,ipart) = 0. ! to be determined by EOS
-       ! r_xy = sqrt(xi**2 + yi**2)
-       ! vphi = Wrot * sqrt(G * Mstar / r_shell**3) * r_xy
-       ! vxyzu(1,i) = vphi * (-1)*sin(loni)
-       ! vxyzu(2,i) = vphi * cos(loni)
-       ! vxyzu(3,i) = 0.
-       ! vxyzu(4,i) = ??? ! to be determined by EOS
+          ! TODO: implement rotation into the setup
+          r2_xy = xi**2 + yi**2
+          vphi = Wrot * sqrt(G * xyzmh_ptmass(4,isink) * r2_xy / r_shell**3)
+          vxyzu(1,ipart) = vphi * (-1)*sin(loni) + vxyz_ptmass(1,isink)
+          vxyzu(2,ipart) = vphi * cos(loni) + vxyz_ptmass(2,isink)
+          vxyzu(3,ipart) = vxyz_ptmass(3,isink)
+          vxyzu(4,ipart) = 0. ! placeholder
+          ! vxyzu(4,j) = ??? ! to be determined by EOS
+       enddo
     enddo
 
  case default
@@ -507,7 +508,7 @@ subroutine set_shell(lattice,id,master,r_shell,npart_start_count,nps_requested,x
     return
  end select
 
- do i=1,np_tot
+ do i=1,np_tot*nshells
     ipart = npart_start_count + i
     call set_particle_type(ipart,itype)
  enddo
