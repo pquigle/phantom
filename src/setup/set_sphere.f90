@@ -461,7 +461,7 @@ subroutine set_shell(lattice,id,master,npart_start_count,nshells,nps_requested, 
  real,             parameter     :: fib    = 1.6180339887
  real,             parameter     :: divfib = 1/1.6180339887
  integer                         :: i,j,k,ipart,ierr,np_half,np_tot
- real                            :: lati,loni,xi,yi,zi,r2_xy,vphi
+ real                            :: rot_shell,lati,loni,xi,yi,zi,r2_xy,vphi
  real                            :: r_shell,delta_r
  !
  !--Initialise values
