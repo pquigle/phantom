@@ -1510,8 +1510,6 @@ subroutine setup_sink_boundary(id,fileprefix,hfact,npart,npartoftype,massoftype,
  real,              intent(inout) :: xyzh(:,:),vxyzu(:,:)
  real,              intent(inout) :: xyzmh_ptmass(:,:),vxyz_ptmass(:,:)
 
- integer            :: i,ipart,ierr
-
  !--skip this step if sinks are not used in this simulation
  if (icentral.ne.1) return
 
