@@ -29,6 +29,7 @@ module inject
  real, public :: wind_velocity = 29.
  integer, public :: wind_resolution = 64
  real, public :: wind_temperature = 1700.
+ real, public :: box_size = 0.5
  private
 
 contains
@@ -58,7 +59,7 @@ subroutine inject_particles(time,dtlast,xyzh,vxyzu,xyzmh_ptmass,vxyz_ptmass,&
  use units,     only:umass,udist,utime
  use physcon,   only:Rg
  use eos,       only:gamma
- use boundary,  only:ymin,ymax,zmin
+ use boundary,  only:ymin,ymax,zmin,set_boundary
  real,    intent(in)    :: time, dtlast
  real,    intent(inout) :: xyzh(:,:), vxyzu(:,:), xyzmh_ptmass(:,:), vxyz_ptmass(:,:)
  integer, intent(inout) :: npart, npart_old
@@ -71,6 +72,8 @@ subroutine inject_particles(time,dtlast,xyzh,vxyzu,xyzmh_ptmass,vxyz_ptmass,&
  integer :: N, outer_wall, inner_wall, inner_handled_wall, particles_per_wall
  integer :: i, iy, iz, i_part, part_type
  real :: local_time, vxyz(3), pxyz(3)
+
+ call set_boundary(l=box_size)
 
  rho = wind_density / (umass/udist**3)
  v = wind_velocity * 1.d5 / (udist/utime)
@@ -106,7 +109,7 @@ subroutine inject_particles(time,dtlast,xyzh,vxyzu,xyzmh_ptmass,vxyz_ptmass,&
        i_part = npart
        part_type = igas
     endif
-    pxyz(1) = local_time * v
+    pxyz(1) = local_time * v + ymin
     print *, '==== ', i, pxyz(1)
     do iy = 1,N
        do iz = 1,N
@@ -149,6 +152,7 @@ subroutine write_options_inject(iunit)
       'wind density (g/cm³) -- DO NOT CHANGE AFTER RUNNING SETUP --',iunit)
  call write_inopt(wind_temperature,'wind_temperature','temperature of the wind (Kelvin)',iunit)
  call write_inopt(wind_resolution,'wind_resolution','resolution of the wind -- DO NOT CHANGE AFTER RUNNING SETUP --',iunit)
+ call write_inopt(box_size,'box_size','boundary of simulation box',iunit)
 
 end subroutine write_options_inject
 
@@ -166,6 +170,7 @@ subroutine read_options_inject(db,nerr)
  call read_inopt(wind_density,'wind_density',db,errcount=nerr,min=0.)
  call read_inopt(wind_temperature,'wind_temperature',db,errcount=nerr,min=0.)
  call read_inopt(wind_resolution,'wind_resolution',db,errcount=nerr,min=1)
+ call read_inopt(box_size,'box_size',db,errcount=nerr,min=0.)
 
 end subroutine read_options_inject
 
