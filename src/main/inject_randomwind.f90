@@ -86,11 +86,7 @@ end subroutine init_inject
 subroutine inject_particles(time,dtlast,xyzh,vxyzu,xyzmh_ptmass,vxyz_ptmass,&
                             npart,npart_old,npartoftype,dtinject)
  use io,            only:fatal
-<<<<<<< HEAD
- use part,          only:nptmass,massoftype,igas,hfact,ihsoft,ipbondi,irbondi,shuffle_part,isdead_or_accreted,kill_particle
-=======
  use part,          only:nptmass,massoftype,igas,hfact,ihsoft,ipbondi,irbondi,delete_dead_or_accreted_particles
->>>>>>> bowshock
  use partinject,    only:add_or_update_particle
  use physcon,       only:twopi,gg,kboltz,mass_proton_cgs
  use random,        only:get_random_pos_on_sphere, get_gaussian_pos_on_sphere
