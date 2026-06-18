@@ -62,6 +62,7 @@ module inject
  real         :: wind_speed_factor = 1.2  ! factor to scale the wind speed based on the Keplerian speed at rinject
  integer      :: shuffle_count = 0        ! number of timesteps since last array pruning
 
+
 contains
 !-----------------------------------------------------------------------
 !+
@@ -85,7 +86,11 @@ end subroutine init_inject
 subroutine inject_particles(time,dtlast,xyzh,vxyzu,xyzmh_ptmass,vxyz_ptmass,&
                             npart,npart_old,npartoftype,dtinject)
  use io,            only:fatal
+<<<<<<< HEAD
  use part,          only:nptmass,massoftype,igas,hfact,ihsoft,ipbondi,irbondi,shuffle_part,isdead_or_accreted,kill_particle
+=======
+ use part,          only:nptmass,massoftype,igas,hfact,ihsoft,ipbondi,irbondi,delete_dead_or_accreted_particles
+>>>>>>> bowshock
  use partinject,    only:add_or_update_particle
  use physcon,       only:twopi,gg,kboltz,mass_proton_cgs
  use random,        only:get_random_pos_on_sphere, get_gaussian_pos_on_sphere
@@ -131,7 +136,7 @@ subroutine inject_particles(time,dtlast,xyzh,vxyzu,xyzmh_ptmass,vxyz_ptmass,&
     else
        rinject = in_code_units(r_inject_str, ierr)
     endif
-    r2 = xyzmh_ptmass(1:3,inject_pt)
+    r2        = xyzmh_ptmass(1:3,inject_pt)
     v2        = vxyz_ptmass(1:3,inject_pt)
     wind_speed = wind_speed_factor*sqrt(xyzmh_ptmass(4, inject_pt)/rinject)
     u         = 0. ! setup is isothermal so utherm is not stored
@@ -226,6 +231,17 @@ subroutine inject_particles(time,dtlast,xyzh,vxyzu,xyzmh_ptmass,vxyz_ptmass,&
  endif
 
  !
+ !-- Clean dead particles from list
+ !
+ if (shuffle_count > 1000) then
+    !print*, 'Shuffling...'
+    call delete_dead_or_accreted_particles(npart, npartoftype)
+    shuffle_count = 0
+ else
+    shuffle_count = shuffle_count + 1
+ endif
+
+ !
  !-- Randomly inject particles around the body's outer 'radius'.
  !
  do i=1,npinject
@@ -234,6 +250,7 @@ subroutine inject_particles(time,dtlast,xyzh,vxyzu,xyzmh_ptmass,vxyz_ptmass,&
        dx = get_pos_on_sphere(seed, delta_theta)
        call rotatevec(dx, rotaxis, theta_rad)
        call cross_product3D(veczprime, dx, vhat)
+       xyz       = r2 + rinject*dx
        vxyz      = v2 + wind_speed*vhat
        xyz       = r2 + rinject*dx
     case default
@@ -327,7 +344,7 @@ subroutine write_options_inject(iunit)
  endif
  if (wind_type==1) then
     call write_inopt(inject_pt, 'inject_pt', 'the particle that excites wind (when wind_type=1)', iunit)
-    call write_inopt(r_inject_str, 'r_inject', 'inject radius with units, e.g. 1*AU, 1e8m, (when wind_type=1)', iunit)
+    call write_inopt(r_inject_str, 'r_inject', 'inject radius with units, e.g. 1*au, 1e8m, (when wind_type=1)', iunit)
  endif
  call write_inopt(wind_speed_factor, &
  & 'wind_speed_factor', 'factor to scale the wind speed based on the Keplerian speed at rinject', iunit)

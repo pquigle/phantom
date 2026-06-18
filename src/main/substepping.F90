@@ -410,11 +410,12 @@ end subroutine substep
 subroutine drift(cki,dt,time_par,npart,nptmass,ntypes,xyzh,xyzmh_ptmass,vxyzu, &
                  vxyz_ptmass,fxyz_ptmass,gtgrad,n_group,n_ingroup,group_info, &
                  bin_info)
- use part, only:isdead_or_accreted,ispinx,ispiny,ispinz,igarg
+ use part,     only:isdead_or_accreted,iamtype,iamboundary,iphase,ispinx,ispiny,ispinz,igarg
  use ptmass,   only:ptmass_drift,use_regnbody
  use subgroup, only:subgroup_evolve
  use io  ,     only:id,master
  use mpiutils, only:bcast_mpi
+ use dim,      only:maxp,maxphase
  real,    intent(in)    :: dt,cki
  integer, intent(in)    :: npart,nptmass,ntypes
  real,    intent(inout) :: time_par
@@ -423,7 +424,7 @@ subroutine drift(cki,dt,time_par,npart,nptmass,ntypes,xyzh,xyzmh_ptmass,vxyzu, &
  real,    intent(inout) :: fxyz_ptmass(:,:),gtgrad(:,:),bin_info(:,:)
  integer, intent(in)    :: n_ingroup,n_group
  integer, intent(inout) :: group_info(:,:)
- integer :: i
+ integer :: i,itype
  real    :: ckdt
 
  ckdt = cki*dt
@@ -431,10 +432,17 @@ subroutine drift(cki,dt,time_par,npart,nptmass,ntypes,xyzh,xyzmh_ptmass,vxyzu, &
  ! Drift gas particles
 
  !$omp parallel do default(none) &
+ !$omp shared(maxp,maxphase) &
+ !$omp shared(iphase,ntypes) &
  !$omp shared(npart,xyzh,vxyzu,ckdt) &
+ !$omp firstprivate(itype) &
  !$omp private(i)
  do i=1,npart
     if (.not.isdead_or_accreted(xyzh(4,i))) then
+       if (ntypes > 1 .and. maxphase==maxp) then
+          itype = iamtype(iphase(i))
+          if (iamboundary(itype)) cycle
+       endif
        xyzh(1,i) = xyzh(1,i) + ckdt*vxyzu(1,i)
        xyzh(2,i) = xyzh(2,i) + ckdt*vxyzu(2,i)
        xyzh(3,i) = xyzh(3,i) + ckdt*vxyzu(3,i)
