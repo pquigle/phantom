@@ -383,8 +383,14 @@ subroutine cons2prim_everything(npart,xyzh,vxyzu,dvdx,rad,eos_vars,radprop,&
                                gamma_local=gammai,mu_local=mui,Xlocal=X_i,Zlocal=Z_i,isionised=isionised(i))
        else
           !isothermal
-          call equationofstate(ieos,p_on_rhogas,spsound,rhogas,xi,yi,zi,temperaturei,mu_local=mui, &
-                               isionised=isionised(i))
+          itype = iamtype(iphase(i))
+          if (iamboundary(itype)) then ! check if particle is boundary: use boundary particle eos
+             call equationofstate(25,p_on_rhogas,spsound,rhogas,xi,yi,zi,temperaturei,mu_local=mui, &
+                            isionised=isionised(i))
+          else
+             call equationofstate(ieos,p_on_rhogas,spsound,rhogas,xi,yi,zi,temperaturei,mu_local=mui, &
+                            isionised=isionised(i))
+          endif
        endif
 
        eos_vars(igasP,i)  = p_on_rhogas*rhogas

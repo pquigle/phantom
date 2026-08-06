@@ -524,6 +524,25 @@ subroutine equationofstate(eos_type,ponrhoi,spsoundi,rhoi,xi,yi,zi,tempi,eni,gam
     ponrhoi = presi/rhoi
     gammai = 1.d0 + presi/(eni*rhoi)
     spsoundi = sqrt(gammai*ponrhoi)
+ case(25)
+!
+!--Locally isothermal disc as in Lodato & Pringle (2007) where
+!
+!  :math:`P = c_s^2 (r) \rho`
+!
+!  sound speed (temperature) is prescribed as a function of radius using:
+!
+!  :math:`c_s = c_{s,0} r^{-q}` where :math:`r = \sqrt{x^2 + y^2 + z^2}`
+!
+!  This is designed specifically for a bi-phase system, such as for atmosphere
+!  plus a disc
+
+    ponrhoi  = polyk*(xi**2 + yi**2 + zi**2)**(-50) ! polyk is cs^2, so this is (R^2)^(-q)
+    ponrhoi = max(ponrhoi, cs_min*cs_min)
+    spsoundi = sqrt(ponrhoi)
+    tempi    = temperature_coef*mui*ponrhoi
+
+
 
  case default
     spsoundi = 0. ! avoids compiler warnings
