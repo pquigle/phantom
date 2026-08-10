@@ -29,6 +29,7 @@ module eos
 !    20 = Ideal gas + radiation + various forms of recombination energy from HORMONE (Hirai et al., 2020)
 !    23 = Hypervelocity Impact of solids-fluids from Tillotson EOS (Tillotson 1962 - implemented by Brundage A. 2013
 !    24 = read tabulated eos (for use with icooling == 9)
+!    25 = sharp gradient eos for atmosphere boundary simulations
 !
 ! :References:
 !    Lodato & Pringle (2007)

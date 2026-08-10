@@ -275,7 +275,7 @@ subroutine cons2prim_everything(npart,xyzh,vxyzu,dvdx,rad,eos_vars,radprop,&
                                 Bevol,Bxyz,dustevol,dustfrac,alphaind)
  use part,              only:isdead_or_accreted,massoftype,igas,rhoh,igasP,iradP,iradxi,ics,imu,iX,iZ,&
                              iohm,ihall,nden_nimhd,eta_nimhd,iambi,get_partinfo,iphase,this_is_a_test,&
-                             ndustsmall,itemp,ikappa,idmu,idgamma,icv,aprmassoftype,apr_level,isionised
+                             ndustsmall,itemp,ikappa,idmu,idgamma,icv,aprmassoftype,apr_level,isionised,iamboundary
  use part,              only:nucleation,igamma
  use eos,               only:equationofstate,ieos,eos_outputs_mu,done_init_eos,init_eos,gmw,X_in,Z_in,gamma
  use radiation_utils,   only:radiation_equation_of_state,get_opacity
@@ -383,8 +383,7 @@ subroutine cons2prim_everything(npart,xyzh,vxyzu,dvdx,rad,eos_vars,radprop,&
                                gamma_local=gammai,mu_local=mui,Xlocal=X_i,Zlocal=Z_i,isionised=isionised(i))
        else
           !isothermal
-          itype = iamtype(iphase(i))
-          if (iamboundary(itype)) then ! check if particle is boundary: use boundary particle eos
+          if (iamboundary(iamtypei)) then ! check if particle is boundary: use boundary particle eos
              call equationofstate(25,p_on_rhogas,spsound,rhogas,xi,yi,zi,temperaturei,mu_local=mui, &
                             isionised=isionised(i))
           else
