@@ -542,8 +542,28 @@ subroutine equationofstate(eos_type,ponrhoi,spsoundi,rhoi,xi,yi,zi,tempi,eni,gam
     ponrhoi = max(ponrhoi, cs_min*cs_min)
     spsoundi = sqrt(ponrhoi)
     tempi    = temperature_coef*mui*ponrhoi
+case(26)
+!
+!--Locally isothermal disc as in Lodato & Pringle (2007) where
+!
+!  :math:`P = c_s^2 (r) \rho`
+!
+!  sound speed (temperature) is prescribed as a function of radius using:
+!
+!  :math:`c_s = c_{s,0} r^{-q}` where :math:`r = \sqrt{x^2 + y^2 + z^2}`
+!
+!  plus a sharp gradient atmosphere interior to the object's radius
 
-
+    r1 = (xi-xyzmh_ptmass(1,isink))**2 + (yi-xyzmh_ptmass(2,isink))**2 + &
+                      (zi-xyzmh_ptmass(3,isink))**2
+    if (r1 > xyzmh_ptmass(iReff, isink)) then
+       ponrhoi  = polyk*(r1)**(-qfacdisc) ! polyk is cs^2, so this is (R^2)^(-q)
+    else
+       ponrhoi  = polyk*(r1)**(-50.)
+    fi
+    ponrhoi = max(ponrhoi, cs_min*cs_min)
+    spsoundi = sqrt(ponrhoi)
+    tempi    = temperature_coef*mui*ponrhoi
 
  case default
     spsoundi = 0. ! avoids compiler warnings
