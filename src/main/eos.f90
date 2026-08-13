@@ -58,7 +58,7 @@ module eos
  use dim,           only:gr,do_radiation
  use eos_gasradrec, only:irecomb
  implicit none
- integer, parameter, public :: maxeos = 24
+ integer, parameter, public :: maxeos = 25
  real,               public :: polyk, polyk2, gamma
  real,               public :: qfacdisc = 0.75, qfacdisc2 = 0.75
  real,               public :: cs_min = 0.0
@@ -126,7 +126,7 @@ contains
 !----------------------------------------------------------------
 subroutine equationofstate(eos_type,ponrhoi,spsoundi,rhoi,xi,yi,zi,tempi,eni,gamma_local,mu_local,Xlocal,Zlocal,radxi,isionised)
  use io,            only:fatal,error,warning
- use part,          only:xyzmh_ptmass, nptmass
+ use part,          only:xyzmh_ptmass, nptmass, iReff
  use units,         only:unit_density,unit_pressure,unit_ergg,unit_velocity
  use physcon,       only:Rg,radconst,kb_on_mh
  use eos_mesa,      only:get_eos_pressure_temp_gamma1_mesa,get_eos_1overmu_mesa
@@ -525,7 +525,7 @@ subroutine equationofstate(eos_type,ponrhoi,spsoundi,rhoi,xi,yi,zi,tempi,eni,gam
     ponrhoi = presi/rhoi
     gammai = 1.d0 + presi/(eni*rhoi)
     spsoundi = sqrt(gammai*ponrhoi)
- case(25)
+case(25)
 !
 !--Locally isothermal disc as in Lodato & Pringle (2007) where
 !
@@ -535,32 +535,16 @@ subroutine equationofstate(eos_type,ponrhoi,spsoundi,rhoi,xi,yi,zi,tempi,eni,gam
 !
 !  :math:`c_s = c_{s,0} r^{-q}` where :math:`r = \sqrt{x^2 + y^2 + z^2}`
 !
-!  This is designed specifically for a bi-phase system, such as for atmosphere
-!  plus a disc
+!  plus a sharp gradient atmosphere interior to the object's radius. Pressure
+!  prescriptions match at the surface.
 
-    ponrhoi  = polyk*(xi**2 + yi**2 + zi**2)**(-50) ! polyk is cs^2, so this is (R^2)^(-q)
-    ponrhoi = max(ponrhoi, cs_min*cs_min)
-    spsoundi = sqrt(ponrhoi)
-    tempi    = temperature_coef*mui*ponrhoi
-case(26)
-!
-!--Locally isothermal disc as in Lodato & Pringle (2007) where
-!
-!  :math:`P = c_s^2 (r) \rho`
-!
-!  sound speed (temperature) is prescribed as a function of radius using:
-!
-!  :math:`c_s = c_{s,0} r^{-q}` where :math:`r = \sqrt{x^2 + y^2 + z^2}`
-!
-!  plus a sharp gradient atmosphere interior to the object's radius
-
-    r1 = (xi-xyzmh_ptmass(1,isink))**2 + (yi-xyzmh_ptmass(2,isink))**2 + &
+    r2 = (xi-xyzmh_ptmass(1,isink))**2 + (yi-xyzmh_ptmass(2,isink))**2 + &
                       (zi-xyzmh_ptmass(3,isink))**2
-    if (r1 > xyzmh_ptmass(iReff, isink)) then
-       ponrhoi  = polyk*(r1)**(-qfacdisc) ! polyk is cs^2, so this is (R^2)^(-q)
+    if (sqrt(r2) > xyzmh_ptmass(iReff, isink)) then
+       ponrhoi  = polyk*(r2)**(-qfacdisc) ! polyk is cs^2, so this is (R^2)^(-q)
     else
-       ponrhoi  = polyk*(r1)**(-50.)
-    fi
+       ponrhoi  = polyk*(xyzmh_ptmass(iReff, isink))**(2*(50.-qfacdisc))*(r2)**(-50.)
+    endif
     ponrhoi = max(ponrhoi, cs_min*cs_min)
     spsoundi = sqrt(ponrhoi)
     tempi    = temperature_coef*mui*ponrhoi
