@@ -1444,7 +1444,7 @@ logical function eos_requires_isothermal(ieos)
  integer, intent(in) :: ieos
 
  select case(ieos)
- case(1,3,6,7,8,13,14,21)
+ case(1,3,6,7,8,13,14,21,25)
     eos_requires_isothermal = .true.
  case default
     !case(2,5,4,10,11,12,15,16,17,20,22,23,24,9)
@@ -1548,7 +1548,7 @@ subroutine eosinfo(eos_type,iprint)
     else
        write(iprint,"(/,a,f10.6,a,f10.6,a,f10.6)") ' Polytropic equation of state: P = ',polyk,'*rho^',gamma,' gmw = ',gmw
     endif
- case(3)
+ case(3,25)
     write(iprint,"(/,a,f10.6,a,f10.6)") ' Locally isothermal eq of state (R_sph): cs^2_0 = ',polyk,' qfac = ',qfacdisc
  case(5,17)
     if (maxvxyzu >= 4) then
