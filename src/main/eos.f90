@@ -543,7 +543,7 @@ case(25)
     if (sqrt(r2) > xyzmh_ptmass(iReff, isink)) then
        ponrhoi  = polyk*(r2)**(-qfacdisc) ! polyk is cs^2, so this is (R^2)^(-q)
     else
-       ponrhoi  = polyk*(xyzmh_ptmass(iReff, isink))**(2*(50.-qfacdisc))*(r2)**(-50.)
+       ponrhoi  = polyk*(xyzmh_ptmass(iReff, isink))**(2*(qfacdisc2-qfacdisc))*(r2)**(-qfacdisc2)
     endif
     ponrhoi = max(ponrhoi, cs_min*cs_min)
     spsoundi = sqrt(ponrhoi)
