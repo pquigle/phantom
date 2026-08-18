@@ -591,7 +591,7 @@ subroutine init_eos(eos_type,ierr)
  temperature_coef = unit_velocity**2  / Rg
 
  select case(eos_type)
- case(6)
+ case(6,25)
     !
     !--Check that if using ieos=6, then isink is set properly
     !
@@ -1332,7 +1332,7 @@ subroutine setpolyk(eos_type,iprint,utherm,xyzhi,npart)
        + xyzhi(3,ipart)*xyzhi(3,ipart)
     polykalt = 2./3.*utherm(ipart)*r2**qfacdisc
 
- case(6)
+ case(6,25)
 !
 !--locally isothermal disc as in Lodato & Pringle (2007), centered on specified sink particle
 !   cs = cs_0*R^(-q) -- polyk is cs^2, so this is (R^2)^(-q)
@@ -1548,7 +1548,7 @@ subroutine eosinfo(eos_type,iprint)
     else
        write(iprint,"(/,a,f10.6,a,f10.6,a,f10.6)") ' Polytropic equation of state: P = ',polyk,'*rho^',gamma,' gmw = ',gmw
     endif
- case(3,25)
+ case(3)
     write(iprint,"(/,a,f10.6,a,f10.6)") ' Locally isothermal eq of state (R_sph): cs^2_0 = ',polyk,' qfac = ',qfacdisc
  case(5,17)
     if (maxvxyzu >= 4) then
@@ -1556,7 +1556,7 @@ subroutine eosinfo(eos_type,iprint)
     else
        write(iprint,*) 'ERROR: eos = 5,17 cannot assume isothermal conditions'
     endif
- case(6)
+ case(6,25)
     write(iprint,"(/,a,i2,a,f10.6,a,f10.6)") ' Locally (on sink ',isink, &
           ') isothermal eos (R_sph): cs^2_0 = ',polyk,' qfac = ',qfacdisc
  case(8)
