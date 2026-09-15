@@ -715,6 +715,10 @@ subroutine equation_of_state(gamma)
                    ! handle the case where ieos=6 is already set in the .in file; do not override this
                    isink = 1
                    print "(/,a)",' keeping ieos=6 for locally isothermal disc with bright primary'
+                elseif (ieos==25) then
+                   ! handle the case where ieos=6 is already set in the .in file; do not override this
+                   isink = 1
+                   print "(/,a)",' keeping ieos=25 for locally isothermal disc with an atmosphere'
                 else
                    ieos = 3
                    print "(/,a)",' setting ieos=3 for locally isothermal disc around origin'
@@ -757,7 +761,7 @@ subroutine equation_of_state(gamma)
        alphau = 0
     endif
 
-    if ( any( ieos==(/3,6,7,13,14/) ) ) then
+    if ( any( ieos==(/3,6,7,13,14,25/) ) ) then
        print "(/,a)",' Setting floor temperature to ', T_floor, ' K.'
        cs_min =  gmw*T_floor/(mass_proton_cgs/kboltz * unit_velocity**2)
     endif
@@ -2860,6 +2864,7 @@ subroutine write_setupfile(filename)
     call write_inopt(rotW,'rotW','fraction of critical rotation',iunit)
     call write_inopt(nshells,'nshells','number of boundary shells',iunit)
     call write_inopt(nghosts,'nghosts','number of ghost boundary particles per shell',iunit)
+    call write_inopt(qfacdisc2,'qatm', 'sound speed power law index of atmosphere',iunit)
 
 
     !--options for oblateness
@@ -3087,9 +3092,8 @@ subroutine write_setupfile(filename)
     call write_inopt(beta_z,'beta_z', 'variation in transition height over radius',iunit)
     call write_inopt(temp_mid0,'temp_mid0', 'midplane temperature scaling factor',iunit)
     call write_inopt(temp_atm0,'temp_atm0', 'atmosphere temperature scaling factor',iunit)
-    call write_inopt(qfacdisc2,'qatm', 'sound speed power law index of atmosphere',iunit)
-
  endif
+
  !--timestepping
  write(iunit,"(/,a)") '# timestepping'
  if (nplanets > 0) then
@@ -3268,6 +3272,7 @@ subroutine read_setupfile(filename,ierr)
     call read_inopt(rotW,'rotW',db,errcount=nerr,min=0.,max=1.)
     call read_inopt(nghosts,'nghosts',db,errcount=nerr,min=0)
     call read_inopt(nshells,'nshells',db,errcount=nerr,min=0)
+    call read_inopt(qfacdisc2,'qatm',db,errcount=nerr)
  end select
 
  call read_inopt(T_floor,'T_floor',db,errcount=nerr)
@@ -3282,7 +3287,6 @@ subroutine read_setupfile(filename,ierr)
     call read_inopt(beta_z,'beta_z',db,errcount=nerr)
     call read_inopt(temp_mid0,'temp_mid0',db,errcount=nerr)
     call read_inopt(temp_atm0,'temp_atm0',db,errcount=nerr)
-    call read_inopt(qfacdisc2,'qatm',db,errcount=nerr)
  endif
 
  !--dust

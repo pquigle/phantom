@@ -29,6 +29,7 @@ module eos
 !    20 = Ideal gas + radiation + various forms of recombination energy from HORMONE (Hirai et al., 2020)
 !    23 = Hypervelocity Impact of solids-fluids from Tillotson EOS (Tillotson 1962 - implemented by Brundage A. 2013
 !    24 = read tabulated eos (for use with icooling == 9)
+!    25 = sharp gradient eos for atmosphere boundary simulations
 !
 ! :References:
 !    Lodato & Pringle (2007)
@@ -57,7 +58,7 @@ module eos
  use dim,           only:gr,do_radiation
  use eos_gasradrec, only:irecomb
  implicit none
- integer, parameter, public :: maxeos = 24
+ integer, parameter, public :: maxeos = 25
  real,               public :: polyk, polyk2, gamma
  real,               public :: qfacdisc = 0.75, qfacdisc2 = 0.75
  real,               public :: cs_min = 0.0
@@ -125,7 +126,7 @@ contains
 !----------------------------------------------------------------
 subroutine equationofstate(eos_type,ponrhoi,spsoundi,rhoi,xi,yi,zi,tempi,eni,gamma_local,mu_local,Xlocal,Zlocal,radxi,isionised)
  use io,            only:fatal,error,warning
- use part,          only:xyzmh_ptmass, nptmass
+ use part,          only:xyzmh_ptmass, nptmass, iReff
  use units,         only:unit_density,unit_pressure,unit_ergg,unit_velocity
  use physcon,       only:Rg,radconst,kb_on_mh
  use eos_mesa,      only:get_eos_pressure_temp_gamma1_mesa,get_eos_1overmu_mesa
@@ -524,6 +525,29 @@ subroutine equationofstate(eos_type,ponrhoi,spsoundi,rhoi,xi,yi,zi,tempi,eni,gam
     ponrhoi = presi/rhoi
     gammai = 1.d0 + presi/(eni*rhoi)
     spsoundi = sqrt(gammai*ponrhoi)
+case(25)
+!
+!--Locally isothermal disc as in Lodato & Pringle (2007) where
+!
+!  :math:`P = c_s^2 (r) \rho`
+!
+!  sound speed (temperature) is prescribed as a function of radius using:
+!
+!  :math:`c_s = c_{s,0} r^{-q}` where :math:`r = \sqrt{x^2 + y^2 + z^2}`
+!
+!  plus a sharp gradient atmosphere interior to the object's radius. Pressure
+!  prescriptions match at the surface.
+
+    r2 = (xi-xyzmh_ptmass(1,isink))**2 + (yi-xyzmh_ptmass(2,isink))**2 + &
+                      (zi-xyzmh_ptmass(3,isink))**2
+    if (sqrt(r2) > xyzmh_ptmass(iReff, isink)) then
+       ponrhoi  = polyk*(r2)**(-qfacdisc) ! polyk is cs^2, so this is (R^2)^(-q)
+    else
+       ponrhoi  = polyk*(xyzmh_ptmass(iReff, isink))**(2*(qfacdisc2-qfacdisc))*(r2)**(-qfacdisc2)
+    endif
+    ponrhoi = max(ponrhoi, cs_min*cs_min)
+    spsoundi = sqrt(ponrhoi)
+    tempi    = temperature_coef*mui*ponrhoi
 
  case default
     spsoundi = 0. ! avoids compiler warnings
@@ -567,7 +591,7 @@ subroutine init_eos(eos_type,ierr)
  temperature_coef = unit_velocity**2  / Rg
 
  select case(eos_type)
- case(6)
+ case(6,25)
     !
     !--Check that if using ieos=6, then isink is set properly
     !
@@ -1308,7 +1332,7 @@ subroutine setpolyk(eos_type,iprint,utherm,xyzhi,npart)
        + xyzhi(3,ipart)*xyzhi(3,ipart)
     polykalt = 2./3.*utherm(ipart)*r2**qfacdisc
 
- case(6)
+ case(6,25)
 !
 !--locally isothermal disc as in Lodato & Pringle (2007), centered on specified sink particle
 !   cs = cs_0*R^(-q) -- polyk is cs^2, so this is (R^2)^(-q)
@@ -1420,7 +1444,7 @@ logical function eos_requires_isothermal(ieos)
  integer, intent(in) :: ieos
 
  select case(ieos)
- case(1,3,6,7,8,13,14,21)
+ case(1,3,6,7,8,13,14,21,25)
     eos_requires_isothermal = .true.
  case default
     !case(2,5,4,10,11,12,15,16,17,20,22,23,24,9)
@@ -1532,7 +1556,7 @@ subroutine eosinfo(eos_type,iprint)
     else
        write(iprint,*) 'ERROR: eos = 5,17 cannot assume isothermal conditions'
     endif
- case(6)
+ case(6,25)
     write(iprint,"(/,a,i2,a,f10.6,a,f10.6)") ' Locally (on sink ',isink, &
           ') isothermal eos (R_sph): cs^2_0 = ',polyk,' qfac = ',qfacdisc
  case(8)
