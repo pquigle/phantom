@@ -119,7 +119,9 @@ real function get_damp_fac_disc(xyz,v0,ptmass) result(fac)
 
  rcyl = sqrt(xyz(1)**2 + xyz(2)**2)
 
- if (rcyl < r2in) then
+ if (rcyl < r1in) then
+    fac = 1.
+ elseif (rcyl < r2in) then
     fac = 1. - (sin(0.5*pi*(rcyl - r1in)/(r2in - r1in)))**2
  elseif ((idamp /= 4).and.(rcyl > r1out)) then
     fac = (sin(0.5*pi*(rcyl - r1out)/(r2out - r1out)))**2*sqrt((r1in/r2out)**3)

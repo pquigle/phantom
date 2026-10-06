@@ -275,6 +275,17 @@ subroutine get_accel_sink_gas(nptmass,xi,yi,zi,hi,xyzmh_ptmass,fxi,fyi,fzi,phi, 
              phi = phi - pmassj*(r**3/3.-4.*r**2*Rsink+24.*r*Rsink**2 &
                   -16.*Rsink**4/r-32.*Rsink**3*log(r))/Rsink**4
           endif
+       case(2)
+          ! Modified Ayliffe & Bate (2010) equation 2 (smaller region)
+          Rsink = xyzmh_ptmass(iReff,j)
+          r=1./ddr
+          if (Rsink > 0. .and. r < 1.2*Rsink) then
+             fac = (1. - (6. - 5.*r/Rsink)**4)
+             f1 = f1*fac
+             f2 = f2*fac
+             phi = phi - pmassj*(625.*r**3/3.-1500.*r**2*Rsink+5400.*r*Rsink**2 &
+                  -1296.*Rsink**4/r-4320.*Rsink**3*log(r))/Rsink**4
+          endif
        end select
 
        ftmpxi = ftmpxi - dx*f1
@@ -2628,7 +2639,7 @@ subroutine read_options_ptmass(db,nerr)
  character(len=*), parameter :: label = 'read_infile'
 
  call read_inopt(icreate_sinks,'icreate_sinks',db,errcount=nerr,min=0,max=2,default=icreate_sinks)
- call read_inopt(isink_potential,'isink_potential',db,errcount=nerr,min=0,max=1,default=isink_potential)
+ call read_inopt(isink_potential,'isink_potential',db,errcount=nerr,min=0,max=2,default=isink_potential)
  call read_inopt(rho_crit_cgs,'rho_crit_cgs',db,errcount=nerr,min=0.,default=rho_crit_cgs)
  call read_inopt(r_crit,'r_crit',db,errcount=nerr,min=0.,default=r_crit)
  call read_inopt(h_acc,'h_acc',db,errcount=nerr,min=0.,default=h_acc)
