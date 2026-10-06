@@ -749,12 +749,15 @@ subroutine step(npart,nactive,t,dtsph,dtextforce,dtnew)
  if (nvfloorps> 0) call summary_variable('floor',iosumflrps,0,real(nvfloorps))
  if (nvfloorc > 0) call summary_variable('floor',iosumflrc, 0,real(nvfloorc) )
  if (its      > 1) call summary_variable('tolv', iosumtvi,  0,real(its)      )
+ call summary_printout(iprint,nptmass)
  if (maxits   > 1 .and. its >= maxits) then
-    call summary_printout(iprint,nptmass)
+ !   call summary_printout(iprint,nptmass)
     call fatal('step','VELOCITY ITERATIONS NOT CONVERGED!!')
  endif
 
  if (gr) call cons2primall(npart,xyzh,metrics,pxyzu,vxyzu,dens,eos_vars)
+
+ 
 
 end subroutine step
 
